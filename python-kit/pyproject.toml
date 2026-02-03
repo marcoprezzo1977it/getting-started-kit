@@ -1,0 +1,10 @@
+[project]
+name = "python-kit"
+version = "0.1.0"
+description = "Python getting started kit"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "kafka-python>=2.2.16",
+    "requests>=2.32.5",
+]
