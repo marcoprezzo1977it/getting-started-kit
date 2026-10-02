@@ -14,7 +14,7 @@ producer = KafkaProducer(
     # Local Kafka
     bootstrap_servers=["localhost:9092"],
 
-    # Remote Kafka
+    # Remote Kafka 
     # bootstrap_servers=["....", "....", "...."],
     # security_protocol="SASL_SSL",
     # sasl_mechanism="PLAIN",
