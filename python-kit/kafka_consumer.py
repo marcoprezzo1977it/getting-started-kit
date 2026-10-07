@@ -1,7 +1,7 @@
 import signal
 from kafka import KafkaConsumer
 
-KAFKA_TOPIC = "test123"
+KAFKA_TOPIC = "rina-test123"
 
 # https://kafka-python.readthedocs.io/en/2.2.16/apidoc/KafkaConsumer.html
 consumer = KafkaConsumer(
@@ -10,15 +10,16 @@ consumer = KafkaConsumer(
     value_deserializer=lambda x: x.decode("utf-8"),
 
     # Local Kafka
-    bootstrap_servers=["localhost:9092"],
+    #bootstrap_servers=["localhost:9092"],
 
     # Remote Kafka
-    # bootstrap_servers=["....", "....", "...."],
-    # security_protocol="SASL_SSL",
-    # sasl_mechanism="PLAIN",
-    # sasl_plain_username="....",
-    # sasl_plain_password="....",
-    # ssl_cafile="cert-chain.pem",
+    bootstrap_servers=["kafka-0.vigimare.laurea.fi:9093","kafka-1.vigimare.laurea.fi:9093","kafka-2.vigimare.laurea.fi:9093"],
+    security_protocol="SASL_SSL",
+    sasl_mechanism="PLAIN",
+    sasl_plain_username="rinac",
+    sasl_plain_password="lahCiyVPrB5rT5F4TdeC",
+    ssl_cafile=None,
+
 )
 
 def process_messages():
