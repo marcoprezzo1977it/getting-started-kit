@@ -72,49 +72,57 @@ value_serializer=lambda x: x.encode("utf-8")
  """
 def send_messages():
 
-    while True:
+        while True:
 
-        repo = InfluxRepository(    INFLUX_URL,
-                                    INFLUX_TOKEN,
-                                    INFLUX_BUCKET)
- 
-        print(f"INFLUX_URL={INFLUX_URL}")
-        print(f"INFLUX_ORG={INFLUX_TOKEN}")
-        print(f"INFLUX_BUCKET={INFLUX_BUCKET}")
+            repo = InfluxRepository(
+                INFLUX_URL,
+                INFLUX_TOKEN,
+                INFLUX_BUCKET
+            )
 
-        detections = repo.get_detections()
+            print(f"INFLUX_URL={INFLUX_URL}")
+            print(f"INFLUX_TOKEN={INFLUX_TOKEN}")
+            print(f"INFLUX_BUCKET={INFLUX_BUCKET}")
 
-        print("=== DETECTION ===")
-        print(f"generated_in          : {detections.generated_in}")
-        print(f"uuid                  : {detections.uuid}")
-        print(f"latitude              : {detections.latitude}")
-        print(f"longitude             : {detections.longitude}")
-        print(f"locationUncertainty   : {detections.locationUncertainty}")
-        print(f"sourceType            : {detections.sourceType}")
-        print(f"trackId               : {detections.trackId}")
-        print(f"category              : {detections.category}")
-        print("=================")
+            detections = repo.get_detections()
 
-        repo.close()        
+            print(f"Detections trovate: {len(detections)}")
 
-        # Creating a vigimare vessel with some randomized values
-        vigimare_object = create_vigimare_object(            
- 
-            legalname=SERVICE_NAME,
-            generated_in= detections.generated_in,#None,
-            uuid= detections.uuid,  # Will be generated
-            latitude= detections.latitude,#59.3293 + round(random.uniform(-1.0, 1.0), 6),
-            longitude= detections.longitude,#18.0686 + round(random.uniform(-1.0, 1.0), 6),
-            location_uncertainty = detections.locationUncertainty,
-            source_type = detections.sourceType,
-            track_id = detections.trackId,
-            category = detections.category,
-        )
-        # Send message to Kafka
-#        producer.send(KAFKA_TOPIC, vigimare_vessel.to_string())
-        print(f"Sent message to topic {KAFKA_TOPIC}:\n{vigimare_object}\n")
-        time.sleep(5)  # Sleep for 5 seconds to simulate real-time updates
+            for detection in detections:
 
+                print("=== DETECTION ===")
+                print(f"generated_in          : {detection.GeneratedIn}")
+                print(f"uuid                  : {detection.UUID}")
+                print(f"latitude              : {detection.Latitude}")
+                print(f"longitude             : {detection.Longitude}")
+                print(f"locationUncertainty   : {detection.LocationUncertainty}")
+                print(f"sourceType            : {detection.SourceType}")
+                print(f"trackId               : {detection.TrackID}")
+                print(f"category              : {detection.Category}")
+                print("=================")
+
+                vigimare_object = create_vigimare_object(
+                    legalname=SERVICE_NAME,
+                    generated_in=detection.GeneratedIn,
+                    uuid=detection.UUID,
+                    latitude=detection.Latitude,
+                    longitude=detection.Longitude,
+                    location_uncertainty=detection.LocationUncertainty,
+                    source_type=detection.SourceType,
+                    track_id=detection.TrackID,
+                    category=detection.Category,
+                )
+
+                # producer.send(KAFKA_TOPIC, vigimare_object.to_string())
+
+                print(
+                    f"Sent message to topic {KAFKA_TOPIC}:\n"
+                    f"{vigimare_object}\n"
+                )
+
+            repo.close()
+
+            time.sleep(5)
 
 def handler(signum, frame):
     print("Bye")
