@@ -1,5 +1,10 @@
 import signal
 import time
+import logging
+import os
+
+from datetime import datetime
+from dotenv import load_dotenv
 from kafka import KafkaProducer
 from utils.helper_functions import create_vigimare_vessel
 from utils.helper_functions import create_vigimare_object
@@ -14,7 +19,10 @@ from configInflux import (
 )
 
 SERVICE_NAME = "My vigimare object test service"
-KAFKA_TOPIC = "rina-test123"
+#KAFKA_TOPIC = "rina-test123"
+LOCATION_UNCERTAINLY = 250
+
+load_dotenv()
 
 """ 
 producer = KafkaProducer(
@@ -26,8 +34,16 @@ bootstrap_servers=[
 value_serializer=lambda x: x.encode("utf-8")
 ) """
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+)
+ 
+logging.getLogger("kafka").setLevel(logging. DEBUG)
+
 # https://kafka-python.readthedocs.io/en/2.2.16/apidoc/KafkaProducer.html
-""" producer = KafkaProducer(
+producer = KafkaProducer(
+
     value_serializer=lambda x: x.encode("utf-8"),
 
     # Local Kafka
@@ -39,40 +55,48 @@ value_serializer=lambda x: x.encode("utf-8")
     sasl_mechanism="PLAIN",
     sasl_plain_username="rinac",
     sasl_plain_password="lahCiyVPrB5rT5F4TdeC",
-    ssl_cafile=None,
+    ssl_cafile = os.getenv("SSL_CAFILE")
+
  )
- """ 
-""" def send_messages():
-    while True:
-        # Creating a vigimare vessel with some randomized values
-        vigimare_vessel = create_vigimare_vessel(
-            legalname=SERVICE_NAME,
-            generated_in=None,
-            uuid=None,  # Will be generated
-            latitude=59.3293 + round(random.uniform(-1.0, 1.0), 6),
-            longitude=18.0686 + round(random.uniform(-1.0, 1.0), 6),
-            name="Titanic",
-            cog=90.0,
-            heading=85.0 + round(random.uniform(-1.0, 1.0), 6),
-            speed=12.5 + round(random.uniform(-1.0, 1.0), 6),
-            breadth=5,
-            call_sign="ABCD",
-            depth=1.8,
-            draught=1.8,
-            length=15.0,
-            mmsi=265513270,
-            navigational_status="UnderWayUsingEngine",
-            ais_ship_type=50,
-            source_type="AIS",
-        )
-        # Send message to Kafka
-        producer.send(KAFKA_TOPIC, vigimare_vessel.to_string())
-        print(f"Sent message to topic {KAFKA_TOPIC}:\n{vigimare_vessel}\n")
-        time.sleep(5)  # Sleep for 5 seconds to simulate real-time updates
- """
+
+def create_topic(
+    uc_no: str,
+    live_historical_date: str,
+    message_type: str,
+    partner_service: str = None,
+    postfix: str = None
+) -> str:
+    
+    #UC<No>_<live/historical date>_<MessageType>_<Partner & Service Short Name>_<optional postfix>
+
+    topic = f"UC{uc_no}_{live_historical_date}_{message_type}"
+
+    if partner_service:
+        topic += f"_{partner_service}"
+
+    if postfix:
+        topic += f"_{postfix}"
+
+    return topic
+
 def send_messages():
 
         while True:
+
+            uc = "1.2"
+
+            test = "live_Object_RINA-C"
+
+            message_type = "Object"
+
+            lhd = "live" #datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            partner_service_name = "RINA-C"
+            #UC<No>_<live/historical date>_<MessageType>_<Partner & Service Short Name>_<optional postfix>
+
+            KAFKA_TOPIC = create_topic(uc,lhd,message_type,partner_service_name)
+
+            print("KAFKA_TOPIC : {KAFKA_TOPIC}")
 
             repo = InfluxRepository(
                 INFLUX_URL,
@@ -80,17 +104,18 @@ def send_messages():
                 INFLUX_BUCKET
             )
 
-            print(f"INFLUX_URL={INFLUX_URL}")
-            print(f"INFLUX_TOKEN={INFLUX_TOKEN}")
-            print(f"INFLUX_BUCKET={INFLUX_BUCKET}")
+            SERVICE_NAME = "Sensors"
 
             detections = repo.get_detections()
 
+            maxMessages = 3
+            
             print(f"Detections trovate: {len(detections)}")
 
-            for detection in detections:
+            for detection in detections[:maxMessages]:
 
                 print("=== DETECTION ===")
+                
                 print(f"generated_in          : {detection.GeneratedIn}")
                 print(f"uuid                  : {detection.UUID}")
                 print(f"latitude              : {detection.Latitude}")
@@ -99,21 +124,30 @@ def send_messages():
                 print(f"sourceType            : {detection.SourceType}")
                 print(f"trackId               : {detection.TrackID}")
                 print(f"category              : {detection.Category}")
+                print(f"newLat                : {detection.newLat}")
+                print(f"newLon                : {detection.newLon}")
                 print("=================")
 
                 vigimare_object = create_vigimare_object(
                     legalname=SERVICE_NAME,
                     generated_in=detection.GeneratedIn,
                     uuid=detection.UUID,
-                    latitude=detection.Latitude,
-                    longitude=detection.Longitude,
-                    location_uncertainty=detection.LocationUncertainty,
+                    latitude=detection.newLat,
+                    longitude=detection.newLon,
+                    location_uncertainty=LOCATION_UNCERTAINLY,  # valore fisso AM 20261016
                     source_type=detection.SourceType,
                     track_id=detection.TrackID,
                     category=detection.Category,
                 )
 
-                # producer.send(KAFKA_TOPIC, vigimare_object.to_string())
+                print("=== VIGIMARE OBJECT ===")
+                print(vigimare_object)
+
+                print("ATTRIBUTI:")
+                print(vars(vigimare_object))
+                print("========================")
+
+#                producer.send(KAFKA_TOPIC, vigimare_object.to_string())
 
                 print(
                     f"Sent message to topic {KAFKA_TOPIC}:\n"
