@@ -162,21 +162,57 @@ def send_messages():
 
     elif MODE_STATE == "prod":
 
-        # In PROD recupero lo stato persistente
+        # ==========================================================
+        # CONFIGURAZIONE PRODUZIONE
+        # ==========================================================
+
+        SAFETY_DELAY_SECONDS = 5
+
+        # Recupero lo stato persistente
         watermark, last_detections = load_state()
 
         # Primo avvio assoluto:
-        # se non esiste ancora un watermark parto da ORA
+        # se non esiste ancora un watermark NON parto esattamente da ORA,
+        # ma da ORA - safety delay.
+        #
+        # In questo modo lasciamo alcuni secondi di margine per eventuali
+        # record che vengono scritti su Influx con leggero ritardo.
         if watermark is None:
-            watermark = datetime.now(timezone.utc)
+
+            now = datetime.now(timezone.utc)
+
+            watermark = now - timedelta(
+                seconds=SAFETY_DELAY_SECONDS
+            )
+
+            last_detections = {}
 
             print("Primo avvio PROD.")
-            print(f"Watermark inizializzato a: {watermark}")
+            print(f"Ora corrente UTC       : {now}")
+            print(
+                f"Safety delay            : "
+                f"{SAFETY_DELAY_SECONDS} secondi"
+            )
+            print(
+                f"Watermark inizializzato : "
+                f"{watermark}"
+            )
+
+        else:
+
+            print(
+                f"Stato persistente trovato. "
+                f"Ripartenza dal watermark: {watermark}"
+            )
 
         print("========================================")
         print("MODALITA': PROD")
         print(f"Watermark caricato: {watermark}")
         print(f"Track caricati: {last_detections}")
+        print(
+            f"Safety delay: "
+            f"{SAFETY_DELAY_SECONDS} secondi"
+        )
         print("========================================")
 
     else:
@@ -265,7 +301,7 @@ def send_messages():
                 key=lambda d: d.GeneratedIn
             )
 
-            maxMessages = 3
+            maxMessages = 1000
             sent_messages = 0
 
             # Tengo traccia dell'ultimo timestamp realmente elaborato
