@@ -199,8 +199,8 @@ class InfluxRepository:
         if df.empty:
             return detections
 
-        print("PRIMO RECORD:")
-        print(df.iloc[0].to_dict())
+        #print("PRIMO RECORD:")
+        #print(df.iloc[0].to_dict())
 
         df = df.dropna(subset=["Latitude", "Longitude"])
 
