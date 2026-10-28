@@ -171,18 +171,99 @@ class InfluxRepository:
             database=database
         )
 
-
-    def get_detections(self, hours=1):
-
+    def get_detections(
+        self,
+        start_time="2026-10-05T09:01:45",
+        end_time="2026-10-05T09:02:40"
+    ):
         table_name = "RinaSensors"
 
-        query = f"""
-        SELECT *
-        FROM "{table_name}"
-        """
+        # Evita valori non numerici o negativi nell'INTERVAL SQL
+        print(f"Range ricerca: {start_time} -> {end_time}")
 
-        print("QUERY:")
-        print(query)
+        query = f"""
+        WITH sound AS (
+            SELECT
+                time,
+                "TrackID",
+                "Category",
+                "Acoustic",
+                "Thermal",
+                "Visible",
+                "LocationUncertainty",
+                "SensorName",
+                "TagId"
+            FROM "{table_name}"
+            WHERE "SensorName" = 'SoundCam'
+            AND "TagId" = 'Warnings'
+            AND "TrackID" IS NOT NULL
+            AND time >= '{start_time}'
+            AND time <= '{end_time}'
+        ),
+
+        gps AS (
+            SELECT
+                time,
+                "Latitude",
+                "LatBaseLine",
+                "Longitude",
+                "LongBaseLine",
+                "Validity"
+            FROM "{table_name}"
+            WHERE "SensorName" = 'RTK3BPro'
+            AND "TagId" = '$GNRMC'
+            AND time >= '{start_time}'
+            AND time <= '{end_time}'
+        ),
+
+        heading AS (
+            SELECT
+                time,
+                "Heading",
+                "HeadingStdDev",
+                "Pitch",
+                "PitchStdDev"
+            FROM "{table_name}"
+            WHERE "SensorName" = 'RTK3BPro'
+            AND "TagId" = '#UNIHEADINGA'
+            AND time >= '{start_time}'
+            AND time <= '{end_time}'
+        )
+
+        SELECT
+            sound.time,
+            sound."TrackID",
+            sound."Category",
+            sound."Acoustic",
+            sound."Thermal",
+            sound."Visible",
+            sound."LocationUncertainty",
+
+            gps."Latitude",
+            gps."LatBaseLine",
+            gps."Longitude",
+            gps."LongBaseLine",
+            gps."Validity",
+
+            heading."Heading",
+            heading."HeadingStdDev",
+            heading."Pitch",
+            heading."PitchStdDev"
+
+        FROM sound
+
+        LEFT JOIN gps
+            ON sound.time = gps.time
+
+        LEFT JOIN heading
+            ON sound.time = heading.time
+
+        ORDER BY
+            sound."TrackID",
+            sound.time
+        """
+#        print("QUERY:")
+#        print(query)
 
         df = self.client.query(
             query=query,
@@ -190,63 +271,83 @@ class InfluxRepository:
         ).to_pandas()
 
         print(f"Record trovati: {len(df)}")
+ #       print("COLONNE:")
+ #       print(df.columns.tolist())
 
         detections = []
-
-        print("COLONNE:")
-        print(df.columns.tolist())
 
         if df.empty:
             return detections
 
-        #print("PRIMO RECORD:")
-        #print(df.iloc[0].to_dict())
-
+        # Mantiene soltanto le righe collegate a una posizione GPS
         df = df.dropna(subset=["Latitude", "Longitude"])
 
-        for _, row in df.iterrows():
+        track_ids = df["TrackID"].dropna().unique().tolist()
+        print(f"TrackID trovati: {track_ids}")
 
-            print("RIGA ESTRATTA")
-            print(row.to_dict())
+        for track_id, track_df in df.groupby("TrackID", sort=False):
 
-            # Calcolo dei NUOVI campi
-            newLat, newLon = calcola_centro_cerchio(row)
+            print(f"Elaborazione TrackID: {track_id}")
+            print(f"Righe associate: {len(track_df)}")
 
-            detection = Detection(
-                LegalName=safe_string(table_name),
+            for _, row in track_df.iterrows():
 
-                GeneratedIn=safe_string(
-                    pd.to_datetime(row["time"], utc=True).isoformat()
-                ),
+                print("RIGA ESTRATTA:")
+                print(row.to_dict())
 
-                UUID=str(uuid.uuid4()),
+                # Calcolo dei nuovi campi a partire dalla riga completa
+                newLat, newLon = calcola_centro_cerchio(row)
 
-                # Valori ORIGINALI provenienti da InfluxDB
-                Latitude=safe_number(row["Latitude"]),
-                Longitude=safe_number(row["Longitude"]),
+                detection = Detection(
+                    LegalName=safe_string(table_name),
 
-                # Nuovi valori CALCOLATI
-                newLat=safe_number(newLat),
-                newLon=safe_number(newLon),
+                    GeneratedIn=safe_string(
+                        pd.to_datetime(row["time"], utc=True).isoformat()
+                    ),
 
-                LocationUncertainty=safe_number(
-                    row.get("LocationUncertainty")
-                ),
+                    UUID=str(uuid.uuid4()),
 
-                SourceType=get_source_type(row),
+                    # Posizione RTK/GPS originale
+                    Latitude=safe_number(row.get("Latitude")),
+                    Longitude=safe_number(row.get("Longitude")),
 
-                TrackID=safe_int(
-                    row.get("TrackID")
-                ),
+                    # Posizione calcolata
+                    newLat=safe_number(newLat),
+                    newLon=safe_number(newLon),
 
-                Category=safe_string(
-                    row.get("Category")
+                    LocationUncertainty=safe_number(
+                        row.get("LocationUncertainty")
+                    ),
+
+                    SourceType=get_source_type(row),
+
+                    TrackID=safe_int(
+                        row.get("TrackID")
+                    ),
+
+                    Category=safe_string(
+                        row.get("Category")
+                    )
+
+                    # Se Detection prevede questi attributi,
+                    # puoi aggiungerli qui:
+                    #
+                    # Acoustic=safe_int(row.get("Acoustic")),
+                    # Thermal=safe_int(row.get("Thermal")),
+                    # Visible=safe_int(row.get("Visible")),
+                    # Heading=safe_number(row.get("Heading")),
+                    # HeadingStdDev=safe_number(row.get("HeadingStdDev")),
+                    # Pitch=safe_number(row.get("Pitch")),
+                    # PitchStdDev=safe_number(row.get("PitchStdDev")),
+                    # Validity=safe_string(row.get("Validity")),
                 )
-            )
 
-            detections.append(detection)
+                detections.append(detection)
+
+        print(f"Detection generate: {len(detections)}")
 
         return detections
+
 
     def close(self):
         self.client.close()

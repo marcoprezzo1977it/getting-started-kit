@@ -75,7 +75,14 @@ def create_location_rel(
     if latitude is None and longitude is None:
         location_rel = None
     else:
-        geometry = Geometry(latitude, longitude)
+        geometry = Geometry(Latitude=latitude,Longitude=longitude)
+
+        print("DEBUG GEOMETRY")
+        print("input latitude :", latitude)
+        print("input longitude:", longitude)
+        print("Geometry.Latitude :", geometry.Latitude)
+        print("Geometry.Longitude:", geometry.Longitude)
+
         location = Location(geometry)
         location_rel = LocationRel([location], cog, heading, speed)
     return location_rel
@@ -129,7 +136,7 @@ def create_vigimare_object(
     """
 
     identifier = create_identifier(legalname, generated_in, uuid)
-    location_rel = create_location_rel(longitude, latitude)
+    location_rel = create_location_rel(latitude, longitude)
 
     data_object = VigimareObject(
         Identifier=identifier,
