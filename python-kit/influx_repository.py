@@ -206,6 +206,11 @@ class InfluxRepository:
             WHERE "SensorName" = 'SoundCam'
             AND "TagId" = 'Warnings'
             AND "TrackID" IS NOT NULL
+            AND (
+                    (sound."AcousticThresh" > 0 AND sound."AcousticPeak" > sound."AcousticThresh")
+                    OR (sound."VisibleThresh" > 0 AND sound."VisiblePeak" > sound."VisibleThresh")
+                    OR (sound."ThermalThresh" > 0 AND sound."ThermalPeak" > sound."ThermalThresh")
+                )
             AND time >= '{start_time}'
             AND time <= '{end_time}'
         ),
