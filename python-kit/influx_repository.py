@@ -139,7 +139,7 @@ def nmea_to_decimal(value, direction):
 
     return decimal
 
-def get_source_type(row):
+def get_source_typeOLD(row):
     for field in ["Acoustic", "Thermal", "Visual"]:
         if field in row.index and not pd.isna(row[field]):
             return field
@@ -187,9 +187,18 @@ class InfluxRepository:
                 time,
                 "TrackID",
                 "Category",
-                "Acoustic",
-                "Thermal",
-                "Visible",
+                CASE
+                    WHEN sound."AcousticThresh" > 0 AND sound."AcousticPeak" > sound."AcousticThresh" THEN 'Acoustic'
+                    WHEN sound."VisibleThresh" > 0 AND sound."VisiblePeak" > sound."VisibleThresh" THEN 'Visible'
+                    WHEN sound."ThermalThresh" > 0 AND sound."ThermalPeak" > sound."AcousticThresh" THEN 'Thermal'
+                    ELSE NULL 
+                END AS VigimareObjectCategory,     
+                "AcousticPeak",
+                "AcousticThresh",
+                "ThermalPeak",
+                "ThermalThresh",
+                "VisiblePeak",
+                "VisibleThresh",                                                
                 "LocationUncertainty",
                 "SensorName",
                 "TagId"
@@ -319,7 +328,7 @@ class InfluxRepository:
                         row.get("LocationUncertainty")
                     ),
 
-                    SourceType=get_source_type(row),
+                    SourceType= row.get("VigimareObjectCategory"),
 
                     TrackID=safe_int(
                         row.get("TrackID")
