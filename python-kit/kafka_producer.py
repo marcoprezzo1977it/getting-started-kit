@@ -23,6 +23,16 @@ SERVICE_NAME = "My vigimare object test service"
 LOCATION_UNCERTAINLY = 250
 
 MODE_STATE = "test"   # "test" oppure "prod"
+USE_CASE = "U1.2"
+ENVIRONMENT = "live"
+
+PARTNER_NAME = "RINA"
+SERVICE_SHORT_NAME = "Sensors"
+
+MESSAGE_TYPE_OBJECT = "Object"
+MESSAGE_TYPE_VESSEL = "VesselRaw"
+MESSAGE_TYPE_INDICATION = "Indication"
+MESSAGE_TYPE_ALERT = "Alert"
 
 TEST_START_TIME = datetime.fromisoformat(
     "2026-10-05T09:02:27+00:00"
@@ -127,10 +137,8 @@ def create_topic(
     partner_service: str = None,
     postfix: str = None
 ) -> str:
-    
-    #UC<No>_<live/historical date>_<MessageType>_<Partner & Service Short Name>_<optional postfix>
 
-    topic = f"UC{uc_no}_{live_historical_date}_{message_type}"
+    topic = f"U{uc_no}_{live_historical_date}_{message_type}"
 
     if partner_service:
         topic += f"_{partner_service}"
@@ -226,8 +234,7 @@ def send_messages():
         uc = "1.2"
         message_type = "Object"
         lhd = "live"
-        partner_service_name = "RINA-C"
-        SERVICE_NAME = "Sensors"
+        partner_service_name = "RINA-Sensors"
 
         KAFKA_TOPIC = create_topic(
             uc,
