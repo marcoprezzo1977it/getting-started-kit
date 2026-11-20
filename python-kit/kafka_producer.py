@@ -35,7 +35,7 @@ MESSAGE_TYPE_INDICATION = "Indication"
 MESSAGE_TYPE_ALERT = "Alert"
 
 TEST_START_TIME = datetime.fromisoformat(
-    "2026-10-05T09:02:27+00:00"
+    "2026-11-06T13:12:20+00:00"
 )
 
 STATE_FILE = "watermark.json"
