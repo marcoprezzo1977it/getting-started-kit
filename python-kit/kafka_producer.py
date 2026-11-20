@@ -188,9 +188,9 @@ def send_messages():
         # record che vengono scritti su Influx con leggero ritardo.
         if watermark is None:
 
-            now = datetime.now(timezone.utc) + INFLUX_TIME_OFFSET
+            now_influx = datetime.now(timezone.utc) + INFLUX_TIME_OFFSET
 
-            watermark = now - timedelta(
+            watermark = now_influx - timedelta(
                 seconds=SAFETY_DELAY_SECONDS
             )
 
@@ -268,22 +268,20 @@ def send_messages():
 
             else:
 
-                # Produzione:
-                # non devo interrogare dati futuri
-                now = datetime.now(timezone.utc)
+                # Ora coerente con i timestamp presenti in Influx
+                now_influx = datetime.now(timezone.utc) + INFLUX_TIME_OFFSET
 
                 end_time = min(
                     start_time + timedelta(seconds=10),
-                    now
+                    now_influx
                 )
 
-                # Se il watermark ha raggiunto il presente
-                # aspetto il ciclo successivo
                 if end_time <= start_time:
 
                     print(
                         f"Nessun nuovo intervallo disponibile. "
-                        f"Watermark={watermark}"
+                        f"Watermark={watermark} "
+                        f"InfluxNow={now_influx}"
                     )
 
                     repo.close()
