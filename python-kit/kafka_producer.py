@@ -22,7 +22,7 @@ SERVICE_NAME = "My vigimare object test service"
 #KAFKA_TOPIC = "rina-test123"
 LOCATION_UNCERTAINLY = 250
 
-MODE_STATE = "prod"   # "test" oppure "prod"
+MODE_STATE = "test"   # "test" oppure "prod"
 USE_CASE = "U1.2"
 ENVIRONMENT = "live"
 
