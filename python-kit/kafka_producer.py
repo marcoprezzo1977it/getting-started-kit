@@ -37,8 +37,7 @@ MESSAGE_TYPE_ALERT = "Alert"
 TEST_START_TIME = datetime.fromisoformat(
     "2026-10-05T09:02:27+00:00"
 )
- 
-INFLUX_TIME_OFFSET = timedelta(hours=0)
+
 STATE_FILE = "watermark.json"
 
 import json
@@ -188,7 +187,7 @@ def send_messages():
         # record che vengono scritti su Influx con leggero ritardo.
         if watermark is None:
 
-            now_influx = datetime.now(timezone.utc) + INFLUX_TIME_OFFSET
+            now_influx = datetime.now(timezone.utc)
 
             watermark = now_influx - timedelta(
                 seconds=SAFETY_DELAY_SECONDS
@@ -269,7 +268,7 @@ def send_messages():
             else:
 
                 # Ora coerente con i timestamp presenti in Influx
-                now_influx = datetime.now(timezone.utc) + INFLUX_TIME_OFFSET
+                now_influx = datetime.now(timezone.utc) 
 
                 end_time = min(
                     start_time + timedelta(seconds=10),
