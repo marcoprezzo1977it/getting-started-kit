@@ -506,11 +506,11 @@ def send_messages():
 
                 watermark = end_time
 
-                print(
-                    f"Nessuna nuova detection utile. "
-                    f"Watermark avanzato a fine finestra: "
-                    f"{watermark}"
-                )
+                #print(
+                #    f"Nessuna nuova detection utile. "
+                #    f"Watermark avanzato a fine finestra: "
+                #    f"{watermark}"
+                #)
 
             # ==========================================================
             # PERSISTENZA
