@@ -184,73 +184,105 @@ class InfluxRepository:
         query = f"""
         WITH sound AS (
             SELECT
-                time,
-                "TrackID",
-                "Category",
+                rs.time,
+                rs."TrackID",
+                rs."Category",
+
                 CASE
-                    WHEN sound."AcousticThresh" > 0 AND sound."AcousticPeak" > sound."AcousticThresh" THEN 'Acoustic'
-                    WHEN sound."VisibleThresh" > 0 AND sound."VisiblePeak" > sound."VisibleThresh" THEN 'Visible'
-                    WHEN sound."ThermalThresh" > 0 AND sound."ThermalPeak" > sound."AcousticThresh" THEN 'Thermal'
-                    ELSE NULL 
-                END AS VigimareObjectCategory,     
-                "AcousticPeak",
-                "AcousticThresh",
-                "ThermalPeak",
-                "ThermalThresh",
-                "VisiblePeak",
-                "VisibleThresh",                                                
-                "LocationUncertainty",
-                "SensorName",
-                "TagId"
-            FROM "{table_name}"
-            WHERE "SensorName" = 'SoundCam'
-            AND "TagId" = 'Warnings'
-            AND "TrackID" IS NOT NULL
+                    WHEN rs."AcousticThresh" > 0
+                        AND rs."AcousticPeak" > rs."AcousticThresh"
+                        THEN 'Acoustic'
+
+                    WHEN rs."VisibleThresh" > 0
+                        AND rs."VisiblePeak" > rs."VisibleThresh"
+                        THEN 'Visible'
+
+                    WHEN rs."ThermalThresh" > 0
+                        AND rs."ThermalPeak" > rs."ThermalThresh"
+                        THEN 'Thermal'
+
+                    ELSE NULL
+                END AS "VigimareObjectCategory",
+
+                rs."AcousticPeak",
+                rs."AcousticThresh",
+                rs."ThermalPeak",
+                rs."ThermalThresh",
+                rs."VisiblePeak",
+                rs."VisibleThresh",
+                rs."LocationUncertainty",
+                rs."SensorName",
+                rs."TagId"
+
+            FROM "{table_name}" AS rs
+
+            WHERE rs."SensorName" = 'SoundCam'
+            AND rs."TagId" = 'Warnings'
+            AND rs."TrackID" IS NOT NULL
+
             AND (
-                    (sound."AcousticThresh" > 0 AND sound."AcousticPeak" > sound."AcousticThresh")
-                    OR (sound."VisibleThresh" > 0 AND sound."VisiblePeak" > sound."VisibleThresh")
-                    OR (sound."ThermalThresh" > 0 AND sound."ThermalPeak" > sound."ThermalThresh")
+                    (
+                        rs."AcousticThresh" > 0
+                        AND rs."AcousticPeak" > rs."AcousticThresh"
+                    )
+                    OR (
+                        rs."VisibleThresh" > 0
+                        AND rs."VisiblePeak" > rs."VisibleThresh"
+                    )
+                    OR (
+                        rs."ThermalThresh" > 0
+                        AND rs."ThermalPeak" > rs."ThermalThresh"
+                    )
                 )
-            AND time >= '{start_time}'
-            AND time <= '{end_time}'
+
+            AND rs.time >= '{start_time}'
+            AND rs.time <= '{end_time}'
         ),
 
         gps AS (
             SELECT
-                time,
-                "Latitude",
-                "LatBaseLine",
-                "Longitude",
-                "LongBaseLine",
-                "Validity"
-            FROM "{table_name}"
-            WHERE "SensorName" = 'RTK3BPro'
-            AND "TagId" = '$GNRMC'
-            AND time >= '{start_time}'
-            AND time <= '{end_time}'
+                gps_src.time,
+                gps_src."Latitude",
+                gps_src."LatBaseLine",
+                gps_src."Longitude",
+                gps_src."LongBaseLine",
+                gps_src."Validity"
+
+            FROM "{table_name}" AS gps_src
+
+            WHERE gps_src."SensorName" = 'RTK3BPro'
+            AND gps_src."TagId" = '$GNRMC'
+            AND gps_src.time >= '{start_time}'
+            AND gps_src.time <= '{end_time}'
         ),
 
         heading AS (
             SELECT
-                time,
-                "Heading",
-                "HeadingStdDev",
-                "Pitch",
-                "PitchStdDev"
-            FROM "{table_name}"
-            WHERE "SensorName" = 'RTK3BPro'
-            AND "TagId" = '#UNIHEADINGA'
-            AND time >= '{start_time}'
-            AND time <= '{end_time}'
+                heading_src.time,
+                heading_src."Heading",
+                heading_src."HeadingStdDev",
+                heading_src."Pitch",
+                heading_src."PitchStdDev"
+
+            FROM "{table_name}" AS heading_src
+
+            WHERE heading_src."SensorName" = 'RTK3BPro'
+            AND heading_src."TagId" = '#UNIHEADINGA'
+            AND heading_src.time >= '{start_time}'
+            AND heading_src.time <= '{end_time}'
         )
 
         SELECT
             sound.time,
             sound."TrackID",
             sound."Category",
-            sound."Acoustic",
-            sound."Thermal",
-            sound."Visible",
+            sound."VigimareObjectCategory",
+            sound."AcousticPeak",
+            sound."AcousticThresh",
+            sound."ThermalPeak",
+            sound."ThermalThresh",
+            sound."VisiblePeak",
+            sound."VisibleThresh",
             sound."LocationUncertainty",
 
             gps."Latitude",
