@@ -197,7 +197,7 @@ def send_messages():
             last_detections = {}
 
             print("Primo avvio PROD.")
-            print(f"Ora corrente UTC       : {now}")
+            print(f"Ora corrente UTC       : {now_influx}")
             print(
                 f"Safety delay            : "
                 f"{SAFETY_DELAY_SECONDS} secondi"
