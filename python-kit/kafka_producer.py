@@ -38,7 +38,7 @@ TEST_START_TIME = datetime.fromisoformat(
     "2026-10-05T09:02:27+00:00"
 )
  
-INFLUX_TIME_OFFSET = timedelta(hours=1)
+INFLUX_TIME_OFFSET = timedelta(hours=0)
 STATE_FILE = "watermark.json"
 
 import json
