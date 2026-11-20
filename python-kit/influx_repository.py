@@ -3,7 +3,10 @@ import uuid
 from dataclasses import dataclass
 from influxdb_client_3 import InfluxDBClient3
 import math
-  
+
+SAFETY_DELAY_SECONDS = 5
+INFLUX_TIME_OFFSET = timedelta(hours=1)
+
 def conversione_NMEA(value, baseline):
 
     if value is None or pd.isna(value):
