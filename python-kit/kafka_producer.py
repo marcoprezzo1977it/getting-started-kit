@@ -3,7 +3,7 @@ import time
 import logging
 import os
 
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from kafka import KafkaProducer
 from utils.helper_functions import create_vigimare_vessel
