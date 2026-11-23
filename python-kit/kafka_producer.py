@@ -18,6 +18,9 @@ from configInflux import (
     INFLUX_BUCKET
 )
 
+logging.getLogger("kafka.protocol.parser").setLevel(logging.INFO)
+logging.getLogger("kafka.net.connection").setLevel(logging.INFO)
+
 SERVICE_NAME = "My vigimare object test service"
 #KAFKA_TOPIC = "rina-test123"
 LOCATION_UNCERTAINLY = 250

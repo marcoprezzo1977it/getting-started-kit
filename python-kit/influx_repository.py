@@ -66,8 +66,8 @@ def calcola_centro_cerchio(row):
         return None, None
 
     if pd.isna(heading):
-        print("ERRORE: Heading è NaN")
-        return None, None
+        print("WARNING: Heading NaN, uso coordinate GPS originali")
+        return lat_dec, lon_dec
 
     # Conversione in radianti
     lat = math.radians(lat_dec)
