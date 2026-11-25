@@ -432,41 +432,41 @@ def send_messages():
                 #
                 # Riattiva questo blocco per effettuare l'invio reale:
                 #
-                # try:
-                #
-                #     future = producer.send(
-                #         KAFKA_TOPIC,
-                #         kafka_message
-                #     )
-                #
-                #     metadata = future.get(timeout=10)
-                #
-                #     producer.flush()
-                #
-                #     print(
-                #         "###############################################"
-                #     )
-                #     print("MESSAGGIO INVIATO CORRETTAMENTE A KAFKA")
-                #     print(f"Topic     : {metadata.topic}")
-                #     print(f"Partition : {metadata.partition}")
-                #     print(f"Offset    : {metadata.offset}")
-                #     print(
-                #         "###############################################"
-                #     )
-                #
-                # except Exception as kafka_error:
-                #
-                #     print(
-                #         "###############################################"
-                #     )
-                #     print("ERRORE INVIO KAFKA")
-                #     print(f"Topic  : {KAFKA_TOPIC}")
-                #     print(f"Errore : {kafka_error}")
-                #     print(
-                #         "###############################################"
-                #     )
-                #
-                #     raise
+                try:
+                
+                     future = producer.send(
+                         KAFKA_TOPIC,
+                         kafka_message
+                     )
+                
+                     metadata = future.get(timeout=10)
+                
+                     producer.flush()
+                
+                     print(
+                         "###############################################"
+                     )
+                     print("MESSAGGIO INVIATO CORRETTAMENTE A KAFKA")
+                     print(f"Topic     : {metadata.topic}")
+                     print(f"Partition : {metadata.partition}")
+                     print(f"Offset    : {metadata.offset}")
+                     print(
+                         "###############################################"
+                     )
+                
+                except Exception as kafka_error:
+                
+                     print(
+                         "###############################################"
+                     )
+                     print("ERRORE INVIO KAFKA")
+                     print(f"Topic  : {KAFKA_TOPIC}")
+                     print(f"Errore : {kafka_error}")
+                     print(
+                         "###############################################"
+                     )
+                
+                     raise
 
                 # ======================================================
                 # AGGIORNAMENTO STATO TRACK
