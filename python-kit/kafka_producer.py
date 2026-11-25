@@ -141,7 +141,7 @@ def create_topic(
     postfix: str = None
 ) -> str:
 
-    topic = f"U{uc_no}_{live_historical_date}_{message_type}"
+    topic = f"UC{uc_no}_{live_historical_date}_{message_type}"
 
     if partner_service:
         topic += f"_{partner_service}"
